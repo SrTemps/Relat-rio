@@ -22,7 +22,16 @@ if uploaded_file:
         df = pd.read_excel(uploaded_file)
 
         # Validar se os dados têm as colunas esperadas
-        colunas_necessarias = ["Unidade", "Cliente", "Vendedor", "Valor_Compra", "Valor_Mensal", "Valor_Plano de assinatura"]
+        colunas_necessarias = [
+            "Unidade", 
+            "Cliente", 
+            "Vendedor", 
+            "Valor_Compra", 
+            "Valor_Mensal", 
+            "Valor_Plano de assinatura", 
+            "Temperatura", 
+            "Mês"
+        ]
         if not set(colunas_necessarias).issubset(df.columns):
             st.error(
                 f"A planilha deve conter as seguintes colunas obrigatórias: {colunas_necessarias}"
@@ -41,7 +50,7 @@ if uploaded_file:
             col3.metric("Total Valor Mensal", f"R$ {soma_valor_mensal:,.2f}")
             col4.metric("Total Plano de Assinatura", f"R$ {soma_valor_plano:,.2f}")
 
-            # Layout: Planilha e Gráfico
+            # Layout: Planilha e Gráficos
             st.header("Planilha Geral e Gráfico")
             col1, col2 = st.columns([3, 2])
 
@@ -60,44 +69,31 @@ if uploaded_file:
                     x="Unidade",
                     y="Quantidade_Clientes",
                     title="Clientes por Unidade",
-                    labels={"Unidade": "Unidade", "Quantidade_Clientes": "Clientes"}
+                    labels={"Unidade": "Unidade", "Quantidade_Clientes": "Clientes"},
+                    text_auto=True
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-            # Gráficos Individuais por Vendedor (Todos os Vendedores)
-            st.header("Análises por Vendedor")
-            vendedores = df["Vendedor"].unique()
+            # Informações por Vendedor - Apenas Escritas
+            st.header("Informações por Vendedor")
+            vendedores = df["Vendedor"].unique()  # Obter todos os nomes de vendedores únicos da planilha
 
             for vendedor in vendedores:
-                st.subheader(f"Análise para o Vendedor: {vendedor}")
-
                 # Filtrando os dados do vendedor específico
                 dados_vendedor = df[df["Vendedor"] == vendedor]
 
-                # Informações principais do vendedor
+                # Resumo de informações do vendedor
                 total_clientes_vendedor = dados_vendedor["Cliente"].nunique()
                 soma_valor_compra_vendedor = dados_vendedor["Valor_Compra"].sum()
                 soma_valor_mensal_vendedor = dados_vendedor["Valor_Mensal"].sum()
                 soma_valor_plano_vendedor = dados_vendedor["Valor_Plano de assinatura"].sum()
 
-                # Apresentando as informações na interface
-                col_vend_1, col_vend_2, col_vend_3, col_vend_4 = st.columns(4)
-                col_vend_1.metric("Total de Clientes Atendidos", total_clientes_vendedor)
-                col_vend_2.metric("Total Valor de Compra", f"R$ {soma_valor_compra_vendedor:,.2f}")
-                col_vend_3.metric("Total Valor Mensal", f"R$ {soma_valor_mensal_vendedor:,.2f}")
-                col_vend_4.metric("Total Plano de Assinatura", f"R$ {soma_valor_plano_vendedor:,.2f}")
-
-                # Gráfico: Comparativo por temperatura e quantidade de propostas
-                st.subheader("Gráfico de Análise do Vendedor")
-                fig_vendedor = px.line(
-                    dados_vendedor,
-                    x="Mês",
-                    y=["Temperatura", "Valor_Compra"],
-                    title=f"Análise do Vendedor: {vendedor}",
-                    labels={"Temperatura": "Temperatura", "Valor_Compra": "Valor de Compra"}
-                )
-                st.plotly_chart(fig_vendedor, use_container_width=True)
-
+                # Exibindo métricas como texto simples
+                st.subheader(f"Resumo para o Vendedor: {vendedor}")
+                st.write(f"Total de Clientes Atendidos: {total_clientes_vendedor}")
+                st.write(f"Total Valor de Compra: R$ {soma_valor_compra_vendedor:,.2f}")
+                st.write(f"Total Valor Mensal: R$ {soma_valor_mensal_vendedor:,.2f}")
+                st.write(f"Total Plano de Assinatura: R$ {soma_valor_plano_vendedor:,.2f}")
     except Exception as e:
         st.error(f"Erro ao processar a planilha: {e}")
 else:
